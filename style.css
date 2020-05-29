@@ -170,17 +170,27 @@ body {
 }
 
 .timer {
-    font-size: 3em;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+/* .wordCount {
+    font-size: 1em;
+    font-weight: bold;
+} */
+
+.wpm {
+    font-size: 1em;
     font-weight: bold;
 }
 
 #reset {
     padding: .5em 1em;
-    font-size: 1.2em;
+    font-size: 0.6em;
     font-weight: bold;
     color: #E95D0F;
     background: white ;
-    border: 10px solid #E95D0F;
+    border: 3px solid #E95D0F;
 }
 
 #reset:hover {

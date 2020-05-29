@@ -3,10 +3,13 @@ const testArea = document.querySelector("#test-area");
 const originText = document.querySelector("#origin-text p").innerHTML;
 const resetButton = document.querySelector("#reset");
 const theTimer = document.querySelector(".timer");
+// const wordCountLabel = document.querySelector(".wordCount");
+const wordsPerMinuteLabel = document.querySelector(".wpm");
 
 var timer = [0,0,0,0];
 var interval;
 var timerRunning = false;
+var uncorrectedErrors = 0;
 
 // Add leading zero to numbers 9 or below (purely for aesthetics):
 function leadingZero(time) {
@@ -25,6 +28,10 @@ function runTimer() {
     timer[0] = Math.floor((timer[3]/100)/60);
     timer[1] = Math.floor((timer[3]/100) - (timer[0] * 60));
     timer[2] = Math.floor(timer[3] - (timer[1] * 100) - (timer[0] * 6000));
+
+    let grossWPM = Math.floor((testArea.value.length/5) / (timer[1]/60));
+    let netWPM = Math.floor(grossWPM - (uncorrectedErrors/(timer[1]/60)));
+    wordsPerMinuteLabel.innerHTML = netWPM + " WPM";
 }
 
 // Match the text entered with the provided text on the page:
@@ -32,16 +39,22 @@ function spellCheck() {
     let textEntered = testArea.value;
     let originTextMatch = originText.substring(0,textEntered.length);
 
-    if (textEntered == originText) {
-        clearInterval(interval);
-        testWrapper.style.borderColor = "#429890";
+    if (event.keyCode === 8) {
+      uncorrectedErrors--;
     } else {
-        if (textEntered == originTextMatch) {
-            testWrapper.style.borderColor = "#65CCf3";
-        } else {
-            testWrapper.style.borderColor = "#E95D0F";
-        }
-    }
+      if (textEntered == originText) {
+          clearInterval(interval);
+          testWrapper.style.borderColor = "#429890"; //Green
+      } else {
+          if (textEntered == originTextMatch) {
+              testWrapper.style.borderColor = "#65CCf3"; //Blue
+              textWrongFirstTime = false;
+          } else {
+              testWrapper.style.borderColor = "#E95D0F"; //Orange
+              uncorrectedErrors++;
+          }
+      }
+  }
 }
 
 // Start the timer:
@@ -51,7 +64,6 @@ function start() {
         timerRunning = true;
         interval = setInterval(runTimer, 10);
     }
-    console.log(textEnterdLength);
 }
 
 // Reset everything:
@@ -60,10 +72,13 @@ function reset() {
     interval = null;
     timer = [0,0,0,0];
     timerRunning = false;
+    wpm = 0 + " WPM";
 
     testArea.value = "";
+    testArea.disabled = false;
     theTimer.innerHTML = "00:00:00";
     testWrapper.style.borderColor = "grey";
+    wordsPerMinuteLabel.innerHTML = wpm;
 }
 
 // Event listeners for keyboard input and the reset
