@@ -10,6 +10,7 @@ var timer = [0,0,0,0];
 var interval;
 var timerRunning = false;
 var uncorrectedErrors = 0;
+var timeElapsed = 0;
 
 // Add leading zero to numbers 9 or below (purely for aesthetics):
 function leadingZero(time) {
@@ -29,9 +30,15 @@ function runTimer() {
     timer[1] = Math.floor((timer[3]/100) - (timer[0] * 60));
     timer[2] = Math.floor(timer[3] - (timer[1] * 100) - (timer[0] * 6000));
 
-    let grossWPM = Math.floor((testArea.value.length/5) / (timer[1]/60));
-    let netWPM = Math.floor(grossWPM - (uncorrectedErrors/(timer[1]/60)));
-    wordsPerMinuteLabel.innerHTML = netWPM + " WPM";
+    timeElapsed = timer[0]*60 + timer[1];
+    let grossWPM = Math.floor((testArea.value.length/5) / (timeElapsed/60));
+    let netWPM = Math.floor(grossWPM - (uncorrectedErrors/(timeElapsed/60)));
+
+    if (netWPM < 0) {
+      wordsPerMinuteLabel.innerHTML = 0 + " WPM";
+    } else {
+      wordsPerMinuteLabel.innerHTML = netWPM + " WPM";
+    }
 }
 
 // Match the text entered with the provided text on the page:
@@ -48,7 +55,6 @@ function spellCheck() {
       } else {
           if (textEntered == originTextMatch) {
               testWrapper.style.borderColor = "#65CCf3"; //Blue
-              textWrongFirstTime = false;
           } else {
               testWrapper.style.borderColor = "#E95D0F"; //Orange
               uncorrectedErrors++;
@@ -72,13 +78,13 @@ function reset() {
     interval = null;
     timer = [0,0,0,0];
     timerRunning = false;
-    wpm = 0 + " WPM";
+    netWPM = 0 + " WPM";
 
     testArea.value = "";
     testArea.disabled = false;
     theTimer.innerHTML = "00:00:00";
     testWrapper.style.borderColor = "grey";
-    wordsPerMinuteLabel.innerHTML = wpm;
+    wordsPerMinuteLabel.innerHTML = netWPM;
 }
 
 // Event listeners for keyboard input and the reset
