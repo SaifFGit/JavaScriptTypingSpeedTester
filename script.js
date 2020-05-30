@@ -8,9 +8,9 @@ const wordsPerMinuteLabel = document.querySelector(".wpm");
 
 var timer = [0,0,0,0];
 var interval;
-var wpmInterval;
 var timerRunning = false;
 var errors = 0;
+var uncorrectedErrors = 0;
 var timeElapsed = 0;
 var randomParagraph = 0;
 var wpm;
@@ -33,34 +33,32 @@ function runTimer() {
     timer[1] = Math.floor((timer[3]/100) - (timer[0] * 60));
     timer[2] = Math.floor(timer[3] - (timer[1] * 100) - (timer[0] * 6000));
 
-    timeElapsed = timer[0]*60 + timer[1];
+    timeElapsed = (timer[0]*60 + timer[1])/60;
+    wordsPerMinute();
 }
 
 // Finds words per minute
 function wordsPerMinute() {
   if (timeElapsed > 0) {
-    var grossWpm = Math.floor((testArea.value.length/5) / (timeElapsed/60));
-    console.log(grossWpm);
-    wpm = Math.floor(((testArea.value.length/5) - errors)/(timeElapsed/60));
-    console.log(wpm);
+    var grossWpm = Math.floor((testArea.value.length/5) / timeElapsed);
+    wpm = Math.floor(grossWpm - uncorrectedErrors/timeElapsed);
     if (wpm < 0) {
       wordsPerMinuteLabel.innerHTML = 0 + " WPM";
     } else {
       wordsPerMinuteLabel.innerHTML = wpm + " WPM";
     }
-    accuracy(grossWpm);
+    accuracy()
   }
 }
 
 // Finds the accuracy
-function accuracy(grossWpm) {
-  let accuracy = Math.floor(wpm/grossWpm*100);
+function accuracy() {
+  let accuracy = Math.floor( (testArea.value.length - errors) / testArea.value.length * 100);
   if (accuracy < 0) {
     accuracyLabel.innerHTML = 0+"%";
   } else {
     accuracyLabel.innerHTML = accuracy+"%";
   }
-  console.log(accuracy);
 }
 
 // Match the text entered with the provided text on the page:
@@ -68,20 +66,19 @@ function spellCheck() {
     let textEntered = testArea.value;
     let originTextMatch = originText.substring(0,textEntered.length);
 
-
     if (textEntered == originText) {
         clearInterval(interval);
-        clearInterval(wpmInterval);
         testWrapper.style.borderColor = "#429890"; //Green
     } else {
         if (textEntered == originTextMatch) {
             testWrapper.style.borderColor = "#65CCf3"; //Blue
         } else {
-            errors++;
-            if (!(event.keyCode === 8)) {
-              testWrapper.style.borderColor = "#E95D0F"; //Orange
+            testWrapper.style.borderColor = "#E95D0F"; //Orange
+            if (event.keyCode === 8) {
+              uncorrectedErrors--;
             } else {
-              errors--;
+              uncorrectedErrors++;
+              errors++;
             }
         }
     }
@@ -93,7 +90,6 @@ function start() {
     if (textEnteredLength === 0 && !timerRunning) {
         timerRunning = true;
         interval = setInterval(runTimer, 10);
-        wpmInterval = setInterval(wordsPerMinute, 1000);
     }
 }
 
@@ -158,14 +154,13 @@ function randomParagraphGenerator() {
 // Reset everything:
 function reset() {
     clearInterval(interval);
-    clearInterval(wpmInterval);
     interval = null;
-    wpmInterval = null;
     timer = [0,0,0,0];
     timerRunning = false;
     wpm = 0 + " WPM";
     timeElapsed = 0;
     errors = 0;
+    uncorrectedErrors = 0;
 
     testArea.value = "";
     testArea.disabled = false;
