@@ -11,10 +11,11 @@ var interval;
 var timerRunning = false;
 var errors = 0;
 var uncorrectedErrors = 0;
-var timeElapsed = 0;
+var timeElapsed = 1;
 var randomParagraph = 0;
 var wpm;
 var mistake = false;
+var updateWPMInterval;
 
 // Add leading zero to numbers 9 or below (purely for aesthetics):
 function leadingZero(time) {
@@ -34,15 +35,14 @@ function runTimer() {
     timer[1] = Math.floor((timer[3]/100) - (timer[0] * 60));
     timer[2] = Math.floor(timer[3] - (timer[1] * 100) - (timer[0] * 6000));
 
-    timeElapsed = (timer[0]*60 + timer[1])/60;
-    wordsPerMinute();
+    timeElapsed = (timer[0]*60 + timer[1] + timer[2]/100 + timer[3]/1000)/60;
 }
 
 // Finds words per minute
 function wordsPerMinute() {
   if (timeElapsed > 0) {
-    let grossWpm = Math.floor((testArea.value.length/5) / timeElapsed);
-    wpm = Math.floor(grossWpm - uncorrectedErrors/timeElapsed);
+    console.log(testArea.value.length);
+    wpm = Math.round(((testArea.value.length/5) - uncorrectedErrors)/timeElapsed);
     if (wpm < 0) {
       wordsPerMinuteLabel.innerHTML = 0 + " WPM";
     } else {
@@ -69,6 +69,7 @@ function spellCheck() {
 
     if (textEntered == originText) {
         clearInterval(interval);
+        clearInterval(updateWPMInterval);
         testWrapper.style.borderColor = "#429890"; //Green
     } else {
         if (mistake === false) {
@@ -88,15 +89,15 @@ function spellCheck() {
             }
         }
     }
-    console.log(uncorrectedErrors);
 }
 
-// Start the timer:
+// Start the timer and update WPM:
 function start() {
     let textEnteredLength = testArea.value.length;
     if (textEnteredLength === 0 && !timerRunning) {
         timerRunning = true;
         interval = setInterval(runTimer, 10);
+        updateWPMInterval = setInterval(wordsPerMinute, 1000);
     }
 }
 
@@ -162,10 +163,11 @@ function randomParagraphGenerator() {
 function reset() {
     clearInterval(interval);
     interval = null;
+    updateWPMInterval = null;
     timer = [0,0,0,0];
     timerRunning = false;
     wpm = 0 + " WPM";
-    timeElapsed = 0;
+    timeElapsed = 1;
     errors = 0;
     uncorrectedErrors = 0;
 
