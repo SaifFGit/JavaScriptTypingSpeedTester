@@ -14,6 +14,7 @@ var uncorrectedErrors = 0;
 var timeElapsed = 0;
 var randomParagraph = 0;
 var wpm;
+var mistake = false;
 
 // Add leading zero to numbers 9 or below (purely for aesthetics):
 function leadingZero(time) {
@@ -40,14 +41,14 @@ function runTimer() {
 // Finds words per minute
 function wordsPerMinute() {
   if (timeElapsed > 0) {
-    var grossWpm = Math.floor((testArea.value.length/5) / timeElapsed);
+    let grossWpm = Math.floor((testArea.value.length/5) / timeElapsed);
     wpm = Math.floor(grossWpm - uncorrectedErrors/timeElapsed);
     if (wpm < 0) {
       wordsPerMinuteLabel.innerHTML = 0 + " WPM";
     } else {
       wordsPerMinuteLabel.innerHTML = wpm + " WPM";
     }
-    accuracy()
+    accuracy();
   }
 }
 
@@ -70,18 +71,24 @@ function spellCheck() {
         clearInterval(interval);
         testWrapper.style.borderColor = "#429890"; //Green
     } else {
+        if (mistake === false) {
+          uncorrectedErrors = 0;
+        }
         if (textEntered == originTextMatch) {
             testWrapper.style.borderColor = "#65CCf3"; //Blue
+            mistake = false;
         } else {
             testWrapper.style.borderColor = "#E95D0F"; //Orange
-            if (event.keyCode === 8) {
-              uncorrectedErrors--;
-            } else {
+            mistake = true;
+            if (!(event.keyCode === 8)) {
               uncorrectedErrors++;
               errors++;
+            } else {
+              uncorrectedErrors--;
             }
         }
     }
+    console.log(uncorrectedErrors);
 }
 
 // Start the timer:
