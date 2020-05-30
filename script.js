@@ -3,15 +3,17 @@ const testArea = document.querySelector("#test-area");
 var originText = document.querySelector("#origin-text p").innerHTML;
 const resetButton = document.querySelector("#reset");
 const theTimer = document.querySelector(".timer");
-// const wordCountLabel = document.querySelector(".wordCount");
+const accuracyLabel = document.querySelector(".accuracy");
 const wordsPerMinuteLabel = document.querySelector(".wpm");
 
 var timer = [0,0,0,0];
 var interval;
+var wpmInterval;
 var timerRunning = false;
-var uncorrectedErrors = 0;
+var errors = 0;
 var timeElapsed = 0;
 var randomParagraph = 0;
+var wpm;
 
 // Add leading zero to numbers 9 or below (purely for aesthetics):
 function leadingZero(time) {
@@ -32,14 +34,33 @@ function runTimer() {
     timer[2] = Math.floor(timer[3] - (timer[1] * 100) - (timer[0] * 6000));
 
     timeElapsed = timer[0]*60 + timer[1];
-    let grossWPM = Math.floor((testArea.value.length/5) / (timeElapsed/60));
-    let netWPM = Math.floor(grossWPM - (uncorrectedErrors/(timeElapsed/60)));
+}
 
-    if (netWPM < 0) {
+// Finds words per minute
+function wordsPerMinute() {
+  if (timeElapsed > 0) {
+    var grossWpm = Math.floor((testArea.value.length/5) / (timeElapsed/60));
+    console.log(grossWpm);
+    wpm = Math.floor(((testArea.value.length/5) - errors)/(timeElapsed/60));
+    console.log(wpm);
+    if (wpm < 0) {
       wordsPerMinuteLabel.innerHTML = 0 + " WPM";
     } else {
-      wordsPerMinuteLabel.innerHTML = netWPM + " WPM";
+      wordsPerMinuteLabel.innerHTML = wpm + " WPM";
     }
+    accuracy(grossWpm);
+  }
+}
+
+// Finds the accuracy
+function accuracy(grossWpm) {
+  let accuracy = Math.floor(wpm/grossWpm*100);
+  if (accuracy < 0) {
+    accuracyLabel.innerHTML = 0+"%";
+  } else {
+    accuracyLabel.innerHTML = accuracy+"%";
+  }
+  console.log(accuracy);
 }
 
 // Match the text entered with the provided text on the page:
@@ -47,29 +68,32 @@ function spellCheck() {
     let textEntered = testArea.value;
     let originTextMatch = originText.substring(0,textEntered.length);
 
-    if (event.keyCode === 8) {
-      uncorrectedErrors--;
+
+    if (textEntered == originText) {
+        clearInterval(interval);
+        clearInterval(wpmInterval);
+        testWrapper.style.borderColor = "#429890"; //Green
     } else {
-      if (textEntered == originText) {
-          clearInterval(interval);
-          testWrapper.style.borderColor = "#429890"; //Green
-      } else {
-          if (textEntered == originTextMatch) {
-              testWrapper.style.borderColor = "#65CCf3"; //Blue
-          } else {
+        if (textEntered == originTextMatch) {
+            testWrapper.style.borderColor = "#65CCf3"; //Blue
+        } else {
+            errors++;
+            if (!(event.keyCode === 8)) {
               testWrapper.style.borderColor = "#E95D0F"; //Orange
-              uncorrectedErrors++;
-          }
-      }
-  }
+            } else {
+              errors--;
+            }
+        }
+    }
 }
 
 // Start the timer:
 function start() {
-    let textEnterdLength = testArea.value.length;
-    if (textEnterdLength === 0 && !timerRunning) {
+    let textEnteredLength = testArea.value.length;
+    if (textEnteredLength === 0 && !timerRunning) {
         timerRunning = true;
         interval = setInterval(runTimer, 10);
+        wpmInterval = setInterval(wordsPerMinute, 1000);
     }
 }
 
@@ -134,16 +158,21 @@ function randomParagraphGenerator() {
 // Reset everything:
 function reset() {
     clearInterval(interval);
+    clearInterval(wpmInterval);
     interval = null;
+    wpmInterval = null;
     timer = [0,0,0,0];
     timerRunning = false;
-    netWPM = 0 + " WPM";
+    wpm = 0 + " WPM";
+    timeElapsed = 0;
+    errors = 0;
 
     testArea.value = "";
     testArea.disabled = false;
     theTimer.innerHTML = "00:00:00";
     testWrapper.style.borderColor = "grey";
-    wordsPerMinuteLabel.innerHTML = netWPM;
+    accuracyLabel.innerHTML = "100%";
+    wordsPerMinuteLabel.innerHTML = wpm;
     randomParagraphGenerator();
 }
 
